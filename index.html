@@ -917,7 +917,7 @@ main.is-pushed {
 
 .dpage {
   flex: 0 0 100vh;
-  width: 100vw;
+  width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1031,15 +1031,8 @@ main.is-pushed {
   .dsub-grid.layout-3-2 > * { grid-column: auto; }
 }
 
-/* d6 单独收紧、为容纳 5 子段 + Fine */
-#d6 .dchapter-card .glass { padding: clamp(24px, 2.6vw, 36px) clamp(28px, 3.2vw, 48px); }
-#d6 .dchapter-lede { margin-bottom: clamp(20px, 2.4vh, 28px); font-size: 16px; line-height: 28px; }
-#d6 .dsub { padding-top: 18px; gap: 8px; }
-#d6 .dsub-desc { font-size: 14.5px; line-height: 24px; }
-#d6 .dsub-title { font-size: clamp(18px, 1.4vw, 22px); }
-#d6 .dsub-grid { gap: clamp(20px, 2vw, 32px); }
-#d6 .detail-fine { margin-top: clamp(20px, 2.4vh, 28px); gap: 20px; font-size: clamp(20px, 1.6vw, 24px); }
-#d6 .detail-fine::before, #d6 .detail-fine::after { width: 64px; }
+/* d6 收尾页：Fine 与 grid 之间的间距单独控制 */
+#d6 .detail-fine { margin-top: clamp(28px, 3.2vh, 40px); }
 
 .dsub {
   display: flex;
@@ -1093,6 +1086,52 @@ main.is-pushed {
   opacity: .4;
 }
 
+/* D6 底部返回主页按钮 */
+.dhome-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(24px, 2.8vh, 36px);
+}
+.dhome-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 30px 13px 26px;
+  background: transparent;
+  border: 1px solid rgba(242, 234, 211, 0.28);
+  border-radius: 999px;
+  color: var(--primary);
+  font-family: var(--fdecor);
+  font-style: italic;
+  font-size: clamp(14px, 1vw, 16px);
+  letter-spacing: .08em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color .4s cubic-bezier(.2,.9,.3,1),
+              background .4s cubic-bezier(.2,.9,.3,1),
+              transform .4s cubic-bezier(.2,.9,.3,1),
+              letter-spacing .4s cubic-bezier(.2,.9,.3,1),
+              padding .4s cubic-bezier(.2,.9,.3,1);
+}
+.dhome-btn:hover {
+  border-color: var(--primary);
+  background: rgba(242, 234, 211, 0.06);
+  transform: translateY(-2px);
+  letter-spacing: .12em;
+  padding-left: 32px;
+  padding-right: 30px;
+}
+.dhome-arr {
+  font-family: var(--fdisplay);
+  font-style: normal;
+  font-size: 17px;
+  line-height: 1;
+  transition: transform .4s cubic-bezier(.2,.9,.3,1);
+}
+.dhome-btn:hover .dhome-arr {
+  transform: translateX(-6px);
+}
+
 /* dpage 内的 reveal 单独的 transition、避免和主页 .rv 干扰 */
 .dpage .rv {
   opacity: 0;
@@ -1117,6 +1156,52 @@ main.is-pushed {
 <noscript><style>.rv{opacity:1!important;transform:none!important;filter:none!important;}</style></noscript>
 </head>
 <body>
+
+<script>
+/* ════════════════════════════════════════════════
+   VIEWPORT SCALE · 4K/2K 自适应
+   设计基准 1920×1080
+   - body 加 zoom = min(innerWidth/1920, innerHeight/1080)，整体等比放大、保持 16:9
+   - 把 .page / .dpage 的 100vh 改成 JS 算的真实 px = innerHeight / zoom；
+     这样 zoom 把它们的视觉高度刚好缩放回 1 个视口，避免 zoom + vh 单位的坑
+   - 翻页距离（detail setIndex 用 vh）也用真实 px、由 window.__pageH 暴露给主脚本读取
+   ════════════════════════════════════════════════ */
+(function () {
+  var dw = 1920, dh = 1080;
+  function apply() {
+    var r = Math.min(window.innerWidth / dw, window.innerHeight / dh);
+    document.body.style.zoom = r.toFixed(4);
+    /* 同时把 body 的 layout width 限制 = innerWidth / zoom，缩放后视觉 = viewport 全宽 */
+    var w = window.innerWidth / r;
+    var h = window.innerHeight / r;
+    document.body.style.width = w + 'px';
+    document.body.style.minWidth = w + 'px';
+    window.__pageH = h;
+    var px = h + 'px';
+    document.querySelectorAll('.page, .dpage').forEach(function (el) {
+      el.style.height = px;
+      el.style.minHeight = px;
+      el.style.flexBasis = px;
+    });
+    /* fixed overlay 不受 body 的 layout 宽影响、单独限制；同时锁住宽高让 zoom 后视觉=viewport */
+    document.querySelectorAll('.detail').forEach(function (el) {
+      el.style.width = w + 'px';
+      el.style.height = h + 'px';
+    });
+    /* 触发 detail / main 重新对齐当前页 */
+    if (typeof window.__resyncMain === 'function') window.__resyncMain();
+    if (typeof window.__resyncDetail === 'function') window.__resyncDetail();
+  }
+  window.__applyViewportScale = apply;
+  /* DOMContentLoaded 后第一次跑（此时 .page / .dpage 已存在） */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', apply);
+  } else {
+    apply();
+  }
+  window.addEventListener('resize', apply);
+})();
+</script>
 
 <div class="grain"></div>
 
@@ -1398,43 +1483,44 @@ main.is-pushed {
         <div class="eyebrow opus rv dhero-eyebrow"><span class="num">I.</span> Prélude</div>
         <h1 class="dhero-name rv rv-d1">TL <span class="em">Agent</span></h1>
         <p class="dhero-tagline rv rv-d2">
-          面向 ARPG 研发团队的 AI Agent——把散落在引擎、配表、代码和协作平台中的操作，统一到一个对话界面。
-        </p>
-        <p class="dhero-lede rv rv-d3">
-          原本换人交接需要一周的配置流程，通过 Agent 在一小时内完成。跨职能的知识壁垒——前端不了解后端、策划看不懂代码——现在直接问 Agent。
-          <br><strong>60 人日常使用 · 4000+ 会话 · 一人从 0 到 1 用 Claude Code 搭建，生产环境部署。</strong>
+          面向 ARPG 研发团队的 AI Agent——把散落在引擎、配表、代码和协作平台中的操作，统一到一个对话界面
         </p>
       </div>
     </section>
 
-    <!-- D2 · 透明执行 -->
+    <!-- D2 · 统一入口 -->
     <section class="dpage" id="d2">
       <div class="wrap">
         <div class="eyebrow opus rv dchapter-eyebrow"><span class="num">II.</span> Allemande</div>
-        <h2 class="dchapter-title rv rv-d1">透明执行</h2>
-        <p class="dchapter-subtitle rv rv-d2">赋予 Agent 远程操作用户电脑的能力</p>
+        <h2 class="dchapter-title rv rv-d1">统一入口</h2>
+        <p class="dchapter-subtitle rv rv-d2">把团队的 AI 提效能力收束到一个网页入口</p>
 
         <div class="dchapter-card rv rv-d3">
           <div class="glass-shell">
             <div class="glass">
               <p class="dchapter-lede">
-                Agent 跑在服务器上，但用户工作区在本地电脑、且两边的文件范围不一样。要尽可能保证 Agent 在远程执行时也有操作本地文件系统一样的效率。
+                团队用 AI 提效的关键在于上下文能不能被持续积累、被所有人共享。每个人各自摸索 AI 的用法、最后只是大家在重复造轮子。所以要把团队的 AI 能力收束到一个入口、所有人共用同一套上下文工程，一起维护迭代
               </p>
-              <div class="dsub-grid cols-3">
+              <div class="dsub-grid cols-2">
                 <div class="dsub">
                   <div class="dsub-num">— i</div>
-                  <div class="dsub-title">透明代理层</div>
-                  <p class="dsub-desc">在 Agent 和文件系统之间有一层透明代理——Agent 调 SDK 标准工具时，系统自动判断路径该本地处理还是转发到用户电脑上的桌面客户端执行，<strong>Agent 完全不知道自己在远程操作</strong>。</p>
+                  <div class="dsub-title">零门槛入口</div>
+                  <p class="dsub-desc">用大家最熟悉的网页聊天形态——类似 ChatGPT / Gemini 那种、打开网页就用、不用装环境、不用学命令行</p>
                 </div>
                 <div class="dsub">
                   <div class="dsub-num">— ii</div>
-                  <div class="dsub-title">合并的统一文件系统</div>
-                  <p class="dsub-desc">每次会话开始做一次目录检测：两边都有的配表和前端代码<strong>优先读用户本地</strong>、保证和用户一致；只在服务器的后端代码直接读服务器。Agent 看到的是一个合并后的统一文件系统、不需要知道文件来自哪台机器。</p>
+                  <div class="dsub-title">共享的上下文工程</div>
+                  <p class="dsub-desc">把项目的领域知识沉淀成一套上下文工程（详见下一节）、所有人共用同一份。每个研发同学直接让"已经懂这个项目的 AI"协助工作</p>
                 </div>
                 <div class="dsub">
                   <div class="dsub-num">— iii</div>
-                  <div class="dsub-title">P4 工作流 + 降级</div>
-                  <p class="dsub-desc">写入自动对接 Perforce：首次写入时<strong>惰性创建专属 Changelist</strong>、后续写入归到同一个 CL、策划在 P4 客户端验收后再提交。断线时读操作回退到服务器副本、写操作直接停止、不中断活跃会话。</p>
+                  <div class="dsub-title">无感远程操控</div>
+                  <p class="dsub-desc">用户不需要切换任何心智——网页里和 Agent 对话、Agent 在背后改本地配置 / 写本地代码 / 提交 P4，<strong>透明代理层</strong>让 Agent 自己不知道在远程操作</p>
+                </div>
+                <div class="dsub">
+                  <div class="dsub-num">— iv</div>
+                  <div class="dsub-title">专业用户出口</div>
+                  <p class="dsub-desc">对习惯 Claude Code 这类专业工具的用户可以通过 API 接入自己的工作流；整套上下文工程是开源的，所有人可以拉到本地做二次改造，走流程合并回服务器主线、与团队成员共享</p>
                 </div>
               </div>
             </div>
@@ -1448,60 +1534,29 @@ main.is-pushed {
       <div class="wrap">
         <div class="eyebrow opus rv dchapter-eyebrow"><span class="num">III.</span> Courante</div>
         <h2 class="dchapter-title rv rv-d1">上下文工程</h2>
-        <p class="dchapter-subtitle rv rv-d2">教会 Agent 项目的私域知识</p>
+        <p class="dchapter-subtitle rv rv-d2">让 Agent 持续懂这个项目</p>
 
         <div class="dchapter-card rv rv-d3">
           <div class="glass-shell">
             <div class="glass">
               <p class="dchapter-lede">
-                Agent 所需的上下文分为两个正交维度——<strong>能力</strong> 和 <strong>领域知识</strong>。两者的变化驱动力完全不同：新增一种能力不影响装备系统的规则、新增一个游戏模块不影响配表流程。
-              </p>
-              <div class="dsub-grid cols-2">
-                <div class="dsub">
-                  <div class="dsub-num">— i</div>
-                  <div class="dsub-title">Skills · 能力</div>
-                  <p class="dsub-desc">每个 Skill 描述完整的工作流程和判断规则、不依赖外部知识——"词缀配置专家"精通词缀的标准流程、"系统调查助手"知道如何追踪代码。<strong>用户也可以封装自己的 Skill 发布给团队、订阅者实时获得更新。</strong></p>
-                </div>
-                <div class="dsub">
-                  <div class="dsub-num">— ii</div>
-                  <div class="dsub-title">Docs · 领域知识</div>
-                  <p class="dsub-desc"><strong>250+ 个按游戏系统组织的知识库</strong>、装备 / 词缀 / 赛季各模块独立、被 Skill 按需加载。一篇描述所有系统核心术语和职责范围的文档作入口索引、确保 Agent 读取正确的文档；同时维护一份系统耦合关系数据库、Agent 阅读相关文档时自动注入耦合查询结果、能更好地解决横跨多系统的任务。</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- D4 · 数据驱动 -->
-    <section class="dpage" id="d4">
-      <div class="wrap">
-        <div class="eyebrow opus rv dchapter-eyebrow"><span class="num">IV.</span> Sarabande</div>
-        <h2 class="dchapter-title rv rv-d1">数据驱动</h2>
-        <p class="dchapter-subtitle rv rv-d2">让真实使用反过来塑造 Agent</p>
-
-        <div class="dchapter-card rv rv-d3">
-          <div class="glass-shell">
-            <div class="glass">
-              <p class="dchapter-lede">
-                Agent 上线后还需要持续根据线上数据监控表现——一个失败的回答到底是缺了领域知识、方法论不完备、还是用户问题本身没描述清。<strong>锐评系统打通"用户反馈 → 自动诊断 → 上下文优化"的闭环</strong>，让每一次真实对话都能反过来推动 Agent 改进。
+                游戏项目的隐性知识太多、每个人的工作经验又不同、一个人根本整理不完。所以上下文工程靠三个驱动力：<strong>团队内部分享、用户主动反馈、会话数据积累</strong>——让它越来越懂这个项目
               </p>
               <div class="dsub-grid cols-3">
                 <div class="dsub">
                   <div class="dsub-num">— i</div>
-                  <div class="dsub-title">用户锐评</div>
-                  <p class="dsub-desc">每个会话界面有一个"锐评"按钮、用户对 Agent 表现不满时一键提交、可附加自由文本说明。用户在反馈队列页面追踪自己的反馈被分析到哪一步、看到最终诊断结果。</p>
+                  <div class="dsub-title">Skill 社区</div>
+                  <p class="dsub-desc">每个用户都可以把自己擅长的领域知识和工作流按固定结构打包成 Skill 发布到社区、其他人订阅后实时获得更新</p>
                 </div>
                 <div class="dsub">
                   <div class="dsub-num">— ii</div>
-                  <div class="dsub-title">自动诊断</div>
-                  <p class="dsub-desc">系统自动导出完整会话——消息、工具调用链、Agent 中间推理——并合并调用次数 / 耗时 / 费用 / 错误分类等量化指标。启动独立的 Claude 实例、加载专门的 session-optimizer Skill、对照项目 CLAUDE.md 做<strong>第一视角还原</strong>、定位上下文工程的哪一环出了问题、产出可执行的修改方案。分析在隔离的 git worktree 里运行、上下文被精简到只保留分析所需信息。</p>
+                  <div class="dsub-title">锐评反馈</div>
+                  <p class="dsub-desc">每个会话界面有一个"锐评"按钮、用户对 Agent 表现不满时一键提交、可附加自由文本说明；提交后启动独立 Claude 实例做<strong>第一视角还原</strong>、定位上下文工程哪一环出了问题、产出可执行的修改方案</p>
                 </div>
                 <div class="dsub">
                   <div class="dsub-num">— iii</div>
-                  <div class="dsub-title">闭环验证</div>
-                  <p class="dsub-desc">修改方案要求写下<strong>可证伪的预期</strong>——用具体指标描述修复后会发生什么变化。方案应用后重跑原会话——克隆工作区做完全隔离、把多轮对话智能压缩成一个综合 prompt 跑在新配置上；重跑后的最终结果、工具调用统计、错误数与预期逐一比对、确认修复有效后再合并回线上。</p>
+                  <div class="dsub-title">会话挖掘</div>
+                  <p class="dsub-desc">会话不活跃时、后台启动独立 Agent 通读完整对话提取记忆。进入 pending 队列由会话发起者审核后入库；记忆分两类：<br>(i). <strong>术语</strong>：下次会话用到时主 Agent 自己 grep 术语表命中即取<br>(ii). <strong>规则</strong>：由一个后台 Agent 实时监控当前对话、命中相关记忆后"插队"塞回主 Agent 上下文</p>
                 </div>
               </div>
             </div>
@@ -1510,10 +1565,10 @@ main.is-pushed {
       </div>
     </section>
 
-    <!-- D5 · 项目专属工具 -->
-    <section class="dpage" id="d5">
+    <!-- D4 · 项目专属工具 -->
+    <section class="dpage" id="d4">
       <div class="wrap">
-        <div class="eyebrow opus rv dchapter-eyebrow"><span class="num">V.</span> Menuet</div>
+        <div class="eyebrow opus rv dchapter-eyebrow"><span class="num">IV.</span> Sarabande</div>
         <h2 class="dchapter-title rv rv-d1">项目专属工具</h2>
         <p class="dchapter-subtitle rv rv-d2">让 Agent 处理项目中的复杂格式文件</p>
 
@@ -1521,23 +1576,51 @@ main.is-pushed {
           <div class="glass-shell">
             <div class="glass">
               <p class="dchapter-lede">
-                游戏项目的核心数据不是代码和文本文件——配置表是 Excel、引擎资产是二进制格式、数据表之间有大量相互引用关系。Agent 原生的文件读写能力处理不了这些、需要专用工具。
+                游戏研发的大量工作围绕引擎资产和配置表这些 Agent 无法原生读写的复杂格式文件展开，要让 AI 更深入地嵌入工作流，就需要有专用的工具让它能更好地理解和读写这些信息
               </p>
               <div class="dsub-grid cols-3">
                 <div class="dsub">
                   <div class="dsub-num">— i</div>
                   <div class="dsub-title">Field Graph</div>
-                  <p class="dsub-desc">策划最常问"改了这个字段会影响哪些地方"——项目里 <strong>800+ 张配置表</strong>、彼此通过外键大量引用、但没有标准 Schema。Field Graph 为所有配置表预建关系索引：覆盖字段间外键、各代码层引用、跨表数据依赖；Agent 能查任意字段的结构定义和数据来源、按条件筛选、沿外键链追踪影响范围、跨全部配置表全文搜索、做数据完整性校验。</p>
+                  <p class="dsub-desc">策划的工作主要围绕项目里 <strong>800+ 张配置表</strong>展开，表中有大量复杂字段，但没有标准 Schema。Field Graph 为所有配置表预建关系索引：覆盖所有字段的注释和外键引用关系，Agent 查表时返回的是字段的完整语义信息，不需要去猜含义</p>
                 </div>
                 <div class="dsub">
                   <div class="dsub-num">— ii</div>
                   <div class="dsub-title">Table Writer</div>
-                  <p class="dsub-desc">Excel 文件的内部结构比看起来复杂、直接用通用库写入容易破坏公式引用和格式。Table Writer 封装安全写入：<strong>优先调 Excel 自身保存机制</strong>保格式零损坏、不可用时回退到精确定点修改——只动被改的单元格、其余保持不变。写入前自动完成版本控制 checkout、写入后可触发数据校验和导出；Agent 试图绕过它直接写 Excel 会被 Hook 拦截并引导回来。</p>
+                  <p class="dsub-desc">项目组的策划配置表有一系列固定的格式规则，直接用通用库写入容易破坏公式引用和格式。Table Writer 封装安全写入：只动被改的单元格、其余保持不变、<strong>优先调 Excel 自身保存机制</strong>保格式零损坏。写入前自动完成版本控制 checkout、写入后可触发数据校验和导出；Agent 试图绕过它直接写 Excel 会被 Hook 拦截并引导回来</p>
                 </div>
                 <div class="dsub">
                   <div class="dsub-num">— iii</div>
                   <div class="dsub-title">UE HTTP API</div>
-                  <p class="dsub-desc">引擎内部的配置数据和美术资产是二进制格式、外部程序无法直接安全修改。我们在引擎编辑器内部署 HTTP 服务插件、Agent 通过它读写引擎配置表行数据、创建编辑美术资产、生成动画蓝图文件、触发数据导出。<strong>所有操作在引擎内部原子完成</strong>——避免外部工具和引擎编辑器争抢文件锁。</p>
+                  <p class="dsub-desc">引擎内部的配置数据和美术资产是二进制格式、外部程序无法直接安全修改。我们在引擎编辑器内部署 HTTP 服务插件、Agent 通过它读写引擎配置表行数据、创建编辑美术资产、生成动画蓝图文件、触发数据导出。<strong>所有操作在引擎内部原子完成</strong>——避免外部工具和引擎编辑器争抢文件锁</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- D5 · AI 原生工作流 -->
+    <section class="dpage" id="d5">
+      <div class="wrap">
+        <div class="eyebrow opus rv dchapter-eyebrow"><span class="num">V.</span> Menuet</div>
+        <h2 class="dchapter-title rv rv-d1">AI 原生工作流</h2>
+        <p class="dchapter-subtitle rv rv-d2">让 AI 成为工作流的编排者、不只是工作流里的一步</p>
+
+        <div class="dchapter-card rv rv-d3">
+          <div class="glass-shell">
+            <div class="glass">
+              <div class="dsub-grid cols-2">
+                <div class="dsub">
+                  <div class="dsub-num">— i</div>
+                  <div class="dsub-title">飞书配置助手</div>
+                  <p class="dsub-desc">策划的大量配置工作有复杂的前置依赖且需要多工种协同，我们把所有前置依赖项整理成格式化的飞书表格，美术填完资产、文案填完包装，直接在飞书群里 @TL Agent 说"帮我更新时装配置"：Agent 自动读多维表格需求源、对照本地 Excel 配表增量更新、跑校验、用专属 P4 CL 提交、回群汇报，直接就能进游戏验收，不再依赖配置同学协同</p>
+                </div>
+                <div class="dsub">
+                  <div class="dsub-num">— ii</div>
+                  <div class="dsub-title">策划文档审核</div>
+                  <p class="dsub-desc">策划在飞书文档里写完案子、评论区直接 @TL Agent，唤起自动审查流程，Agent 把问题以飞书评论形式挂在文档对应段落上 @ 作者、通过文档的自动归档到 wiki 对应领域。<strong>审核规则是一份可以自由扩展的 Skill，整个研发上下游都可以维护它。</strong>审查状态持久化在飞书多维表格、对人类透明、Agent 进程崩溃也不丢状态</p>
                 </div>
               </div>
             </div>
@@ -1556,38 +1639,37 @@ main.is-pushed {
         <div class="dchapter-card rv rv-d3">
           <div class="glass-shell">
             <div class="glass">
-              <p class="dchapter-lede">
-                Agent 不只操作项目代码和配置、还能直接读写团队日常使用的协作平台、让用户无需在多个工具之间来回粘贴上下文。
-              </p>
-              <div class="dsub-grid layout-3-2">
+              <div class="dsub-grid cols-2">
                 <div class="dsub">
                   <div class="dsub-num">— i</div>
                   <div class="dsub-title">即时通讯</div>
-                  <p class="dsub-desc">接入 <strong>Slack 和飞书</strong>、用户在群里 @ 即可使用 Agent、不需要打开独立网页界面。飞书侧接入更深：除了对话还对接工作流引擎、通过事件驱动 Agent 自动执行配置工作和多维表格读写。</p>
+                  <p class="dsub-desc">接入 <strong>Slack</strong>、用户在群里 @TL Agent 即可使用、不需要打开网页界面；所有动作群成员可见、既保留即时讨论的协作感、也让任何人都能实时介入或打断</p>
                 </div>
                 <div class="dsub">
                   <div class="dsub-num">— ii</div>
                   <div class="dsub-title">项目管理</div>
-                  <p class="dsub-desc">接入 <strong>Jira</strong>、Agent 能查任务、找负责人、跟进度、看排期、帮用户在对话中直接获取项目管理信息。</p>
+                  <p class="dsub-desc">接入 <strong>Jira</strong>、Agent 能查任务、找负责人、跟进度、看排期、帮用户在对话中直接获取项目管理信息</p>
                 </div>
                 <div class="dsub">
                   <div class="dsub-num">— iii</div>
-                  <div class="dsub-title">策划文档</div>
-                  <p class="dsub-desc">项目历史文档都在 <strong>Confluence</strong>、因维护不完善没作为默认上下文使用；用户需要时主动触发检索：读取时自动把富文本格式转 Markdown 供 Agent 理解、也能把工作成果直接写回源页面。</p>
+                  <div class="dsub-title">数据查询</div>
+                  <p class="dsub-desc">接入<strong>线上数据仓库</strong>、用户用自然语言描述需求、Agent 生成 SQL 查询并返回结果——对比不同版本的首日付费收入、分析新版本玩家留存和行为路径、查询特定玩法的参与率和收益数据</p>
                 </div>
                 <div class="dsub">
                   <div class="dsub-num">— iv</div>
-                  <div class="dsub-title">数据查询</div>
-                  <p class="dsub-desc">接入<strong>线上数据仓库</strong>、用户用自然语言描述需求、Agent 生成 SQL 查询并返回结果——对比不同版本的首日付费收入、分析新版本玩家留存和行为路径、查询特定玩法的参与率和收益数据。Agent 在执行前会先和用户确认查询条件和数据源。</p>
-                </div>
-                <div class="dsub">
-                  <div class="dsub-num">— v</div>
                   <div class="dsub-title">服务端诊断</div>
-                  <p class="dsub-desc">每个团队成员都有自己的<strong>个人测试服</strong>、用户排查问题时 Agent 直接访问服务端错误日志、读取运行时配置文件、查询游戏数据库、不需要找研发帮忙。</p>
+                  <p class="dsub-desc">每个团队成员都有自己的<strong>个人测试服</strong>、用户排查问题时 Agent 直接访问服务端错误日志、读取运行时配置文件、查询游戏数据库、不需要找研发帮忙</p>
                 </div>
               </div>
 
               <div class="detail-fine rv rv-d4">Fine</div>
+
+              <div class="dhome-wrap rv rv-d5">
+                <button class="dhome-btn" type="button" data-close-detail aria-label="返回主页">
+                  <span class="dhome-arr" aria-hidden="true">←</span>
+                  <span class="dhome-text">返回主页</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1636,7 +1718,9 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
     isScrolling = true;
     currentIndex = idx;
 
-    const target = pages[idx].offsetTop;
+    /* scrollTo 的 y 单位 = visual px（zoom 后实际像素），一屏视觉高 = window.innerHeight。
+       不能用 layout pageH 也不能用 offsetTop（带 padding）——直接 idx × innerHeight */
+    const target = idx * window.innerHeight;
     const start = window.scrollY;
     const distance = target - start;
     const startTime = performance.now();
@@ -1657,10 +1741,14 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
 
   /* sync from scroll position on load (e.g. #p2 deeplink) */
   window.addEventListener('load', () => {
-    const vh = window.innerHeight;
     currentIndex = Math.max(0, Math.min(pages.length - 1,
-      Math.round(window.scrollY / vh)));
+      Math.round(window.scrollY / window.innerHeight)));
   });
+
+  /* viewport scale resize 时把 main 重新对齐到 currentIndex × innerHeight */
+  window.__resyncMain = function () {
+    window.scrollTo(0, currentIndex * window.innerHeight);
+  };
 
   /* inertia detection: 触控板单次 swipe 衰减出多个 events、要识别并吞掉余波 */
   let lastWheelTime = 0;
@@ -1763,7 +1851,14 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
   }
 
   function revealPage(idx) {
-    dpages[idx].querySelectorAll('.rv').forEach(el => el.classList.add('vis'));
+    /* 每次翻到目标页都"重启"动画：先清 vis、强制 reflow、再延迟 add——
+       让用户来回滑同一页时也始终能看到标题→副标题→卡片的递进显现 */
+    const els = dpages[idx].querySelectorAll('.rv');
+    els.forEach(el => el.classList.remove('vis'));
+    void dpages[idx].offsetHeight;
+    setTimeout(() => {
+      els.forEach(el => el.classList.add('vis'));
+    }, 120);
   }
 
   function clearAllReveals() {
@@ -1782,14 +1877,16 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
     updatePageNo(idx);
     revealPage(idx);
 
-    const startVh = -oldIdx * 100;
-    const endVh = -idx * 100;
+    /* 用 layout px 翻页（不是 vh）——和 viewport-scale 联动后避免 zoom + vh 错位 */
+    const pageH = window.__pageH || window.innerHeight;
+    const startPx = -oldIdx * pageH;
+    const endPx = -idx * pageH;
     const startTime = performance.now();
 
     function step(now) {
       const t = Math.min((now - startTime) / SCROLL_DURATION, 1);
-      const cur = startVh + (endVh - startVh) * easeInOutCubic(t);
-      stack.style.transform = `translate3d(0, ${cur}vh, 0)`;
+      const cur = startPx + (endPx - startPx) * easeInOutCubic(t);
+      stack.style.transform = `translate3d(0, ${cur}px, 0)`;
       if (t < 1) {
         requestAnimationFrame(step);
       } else {
@@ -1813,6 +1910,15 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
     stack.style.transition = '';
     clearAllReveals();
   }
+
+  /* viewport scale resize 时把 stack 重新对齐到当前 detailIdx 对应的 px 偏移 */
+  window.__resyncDetail = function () {
+    const pageH = window.__pageH || window.innerHeight;
+    stack.style.transition = 'none';
+    stack.style.transform = `translate3d(0, ${-detailIdx * pageH}px, 0)`;
+    void stack.offsetHeight;
+    stack.style.transition = '';
+  };
 
   /* wheel + 触控板余波识别（与主页同套机制） */
   let lastWheelTime = 0;
