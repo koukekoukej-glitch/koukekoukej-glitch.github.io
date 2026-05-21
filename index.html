@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#171717">
 <title>金国琛 — 个人简历</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1152,6 +1153,515 @@ main.is-pushed {
   .dhero-name { font-size: 64px; }
   .dpage { padding-top: 96px; padding-bottom: 64px; }
 }
+
+/* ════════════════════════════════════════════════
+   MOBILE · ≤768px
+   JS 检测命中后给 <html> 加 .mobile、桌面 zoom 被旁路、布局走原生 px
+   保持桌面视觉系统不变（暗底 + 米色 + 玻璃 + 古典乐章命名 + 暖光 + 噪点）
+   ════════════════════════════════════════════════ */
+html.mobile body {
+  font-size: 15px;
+  line-height: 24px;
+  overscroll-behavior: none;
+}
+html.mobile {
+  overscroll-behavior: none;
+}
+
+/* iOS Safari 地址栏：用 dvh 单位、跟随地址栏伸缩 */
+@supports (height: 100dvh) {
+  html.mobile .page,
+  html.mobile .dpage {
+    min-height: 100dvh;
+  }
+}
+
+/* ── 移动端翻页：scroll-snap 实现一屏一翻、内容超高时屏内可滚再翻 ── */
+html.mobile,
+html.mobile body {
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  height: 100%;
+}
+html.mobile body {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ── PAGE 容器：高度自适应、内容靠上、scroll-snap 锚 ── */
+html.mobile .page {
+  height: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 64px 0 60px;
+  justify-content: flex-start;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+html.mobile .wrap {
+  padding: 0 22px;
+}
+html.mobile .page-head {
+  top: 16px;
+  padding: 0 22px;
+  font-size: 11px;
+  letter-spacing: .18em;
+  line-height: 16px;
+}
+html.mobile .page-head .label .note {
+  font-size: 14px;
+  margin-right: 8px;
+}
+html.mobile .page-head .label .em {
+  margin: 0 5px;
+}
+html.mobile .page-foot {
+  bottom: 16px;
+  padding: 0 22px;
+  font-size: 11px;
+  letter-spacing: .14em;
+}
+html.mobile .page-foot .ember {
+  font-size: 10.5px;
+  letter-spacing: .18em;
+  gap: 10px;
+}
+html.mobile .page-foot .ember::after {
+  width: 9px;
+  height: 9px;
+  border-right-width: 1.25px;
+  border-bottom-width: 1.25px;
+  margin-top: -3px;
+}
+html.mobile .page-foot .fin {
+  font-size: 15px;
+}
+
+/* ── GLASS padding 收 ── */
+html.mobile .glass {
+  padding: 22px;
+  border-radius: 17px;
+}
+html.mobile .glass-shell {
+  border-radius: 18px;
+}
+
+/* ── EYEBROW / 标题节奏 ── */
+html.mobile .eyebrow {
+  font-size: 12px;
+  letter-spacing: .22em;
+  gap: 10px;
+}
+html.mobile .eyebrow::before {
+  width: 24px;
+}
+html.mobile .eyebrow.opus {
+  font-size: 19px;
+  gap: 14px;
+}
+html.mobile .eyebrow.opus::before {
+  width: 32px;
+}
+html.mobile .page-title {
+  font-size: 38px;
+  line-height: 1.12;
+  letter-spacing: .06em;
+  margin-bottom: 24px;
+}
+
+/* ── PAGE 01 · COVER ── */
+html.mobile .cover-grid {
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+html.mobile .cover-name-cn {
+  font-size: 52px;
+  letter-spacing: .1em;
+  margin-bottom: 20px;
+}
+html.mobile .cover-role {
+  gap: 12px;
+  margin-bottom: 22px;
+}
+html.mobile .cover-role .role-cn {
+  font-size: 17px;
+  letter-spacing: .08em;
+}
+html.mobile .cover-role .div {
+  width: 24px;
+}
+html.mobile .cover-contact {
+  gap: 8px;
+  padding-top: 16px;
+}
+html.mobile .contact-row {
+  grid-template-columns: 56px 1fr;
+  gap: 12px;
+  padding: 3px 0;
+}
+html.mobile .contact-row .k {
+  font-size: 10.5px;
+  letter-spacing: .2em;
+}
+html.mobile .contact-row .v {
+  font-size: 13.5px;
+  line-height: 19px;
+  word-break: break-all;
+}
+html.mobile .cover-card .glass {
+  padding: 22px;
+}
+html.mobile .cover-card .intro-eyebrow {
+  margin-bottom: 16px;
+}
+html.mobile .cover-card .intro {
+  font-size: 14.5px;
+  line-height: 25px;
+}
+
+/* ── PAGE 02 · TL AGENT ── */
+html.mobile .proj-name {
+  font-size: 56px;
+  line-height: .92;
+  letter-spacing: -0.03em;
+  margin-bottom: 14px;
+}
+html.mobile .proj-tagline {
+  font-size: 15px;
+  margin-bottom: 20px;
+}
+html.mobile .proj-card .glass {
+  padding: 22px 20px;
+}
+html.mobile .proj-detail {
+  font-size: 14.5px;
+  line-height: 25px;
+  margin-bottom: 20px;
+}
+html.mobile .proj-bullets {
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+html.mobile .proj-bullets li {
+  grid-template-columns: 32px 1fr;
+  gap: 10px;
+}
+html.mobile .proj-bullets .bnum {
+  font-size: 22px;
+}
+html.mobile .proj-bullets .btxt {
+  font-size: 14px;
+  line-height: 23px;
+}
+html.mobile .cta {
+  font-size: 12.5px;
+  padding: 12px 22px;
+  letter-spacing: .12em;
+  gap: 10px;
+}
+html.mobile .cta .arr {
+  font-size: 16px;
+}
+
+/* ── PAGE 03 · OPEN SOURCE ── */
+html.mobile .oss-grid {
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+html.mobile .oss-card .glass {
+  min-height: auto;
+  padding: 22px;
+}
+html.mobile .oss-card .num {
+  font-size: 16px;
+  margin-bottom: 18px;
+}
+html.mobile .oss-card .name {
+  font-size: 23px;
+  margin-bottom: 12px;
+}
+html.mobile .oss-card .desc {
+  font-size: 14.5px;
+  line-height: 24px;
+  margin-bottom: 18px;
+}
+html.mobile .oss-link {
+  font-size: 12.5px;
+  letter-spacing: .16em;
+  gap: 8px;
+  padding-bottom: 7px;
+}
+html.mobile .oss-link .ic {
+  width: 12px;
+  height: 12px;
+}
+html.mobile .oss-link .arr {
+  font-size: 14px;
+}
+
+/* ── PAGE 04 · EXPERIENCE ── */
+html.mobile .exp-list {
+  gap: 12px;
+}
+html.mobile .exp-block .glass {
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding: 20px;
+}
+html.mobile .exp-period {
+  font-size: 11.5px;
+  letter-spacing: .16em;
+  padding-top: 0;
+}
+html.mobile .exp-org {
+  font-size: 18px;
+  letter-spacing: .04em;
+}
+html.mobile .exp-role {
+  font-size: 14.5px;
+  margin-bottom: 8px;
+}
+html.mobile .exp-ctx {
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+html.mobile .exp-bullets li {
+  font-size: 14px;
+  line-height: 23px;
+  padding-left: 18px;
+}
+html.mobile .exp-bullets li::before {
+  top: 11px;
+  width: 8px;
+}
+html.mobile .exp-bullets a.exp-link {
+  font-size: 13.5px;
+  gap: 8px;
+}
+html.mobile .exp-bullets a.exp-link .arr {
+  font-size: 15px;
+}
+html.mobile .end-mark {
+  margin-top: 22px;
+  gap: 16px;
+  font-size: 22px;
+}
+html.mobile .end-mark::before,
+html.mobile .end-mark::after {
+  width: 44px;
+}
+
+/* ── DETAIL: mobile 上转成可滚 + 内置 scroll-snap、chrome sticky 顶部 ── */
+html.mobile .detail {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+html.mobile .detail-stack {
+  position: static;
+  transform: none !important;
+  will-change: auto;
+}
+
+/* ── DETAIL · CHROME（mobile：sticky 顶部、不再 absolute） ── */
+html.mobile .detail-chrome {
+  position: sticky;
+  top: 0;
+  padding: 14px 22px;
+  background: rgba(19, 21, 29, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 20;
+}
+/* 主页 chrome 在 mobile 上也保持在每屏顶部 sticky，与 detail 一致 */
+html.mobile .page-head {
+  /* 保留 absolute、跟着 page 一起 snap、避免 sticky 在 scroll-snap 容器里的兼容问题 */
+}
+html.mobile .detail-label {
+  font-size: 10.5px;
+  letter-spacing: .16em;
+  gap: 8px;
+}
+html.mobile .detail-label .note {
+  font-size: 13px;
+}
+html.mobile .detail-label .em {
+  margin: 0 3px;
+}
+html.mobile .detail-label .pageno {
+  margin-left: 4px;
+  letter-spacing: .16em;
+}
+html.mobile .detail-back {
+  padding: 9px 13px;
+  font-size: 11px;
+  letter-spacing: .18em;
+  gap: 6px;
+}
+html.mobile .detail-back .back-text {
+  display: none;
+}
+html.mobile .detail-back .arr-back {
+  font-size: 15px;
+}
+
+/* ── DETAIL · DPAGE：高度自适应、内容靠上、snap 锚 ── */
+html.mobile .dpage {
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 80px 0 60px;
+  justify-content: flex-start;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+html.mobile .dhero-eyebrow,
+html.mobile .dchapter-eyebrow {
+  margin-bottom: 18px;
+}
+html.mobile .dhero-name {
+  font-size: 54px;
+  line-height: .92;
+  letter-spacing: -0.04em;
+  margin-bottom: 22px;
+}
+html.mobile .dhero-tagline {
+  font-size: 16px;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+html.mobile .dhero-lede {
+  font-size: 14.5px;
+  line-height: 26px;
+}
+html.mobile .dchapter-title {
+  font-size: 34px;
+  line-height: 1.08;
+  letter-spacing: .04em;
+  margin-bottom: 10px;
+}
+html.mobile .dchapter-subtitle {
+  font-size: 15px;
+  line-height: 1.4;
+  margin-bottom: 18px;
+}
+html.mobile .dchapter-card .glass {
+  padding: 22px 20px;
+}
+html.mobile .dchapter-lede {
+  font-size: 14.5px;
+  line-height: 25px;
+  margin-bottom: 20px;
+}
+html.mobile .dsub-grid.cols-2,
+html.mobile .dsub-grid.cols-3,
+html.mobile .dsub-grid.layout-3-2 {
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+html.mobile .dsub-grid.layout-3-2 > * {
+  grid-column: auto;
+}
+html.mobile .dsub {
+  gap: 8px;
+  padding-top: 16px;
+}
+html.mobile .dsub-num {
+  font-size: 14.5px;
+}
+html.mobile .dsub-title {
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  margin-bottom: 2px;
+}
+html.mobile .dsub-desc {
+  font-size: 13.5px;
+  line-height: 23px;
+}
+html.mobile .detail-fine {
+  margin-top: 22px;
+  gap: 16px;
+  font-size: 21px;
+}
+html.mobile .detail-fine::before,
+html.mobile .detail-fine::after {
+  width: 44px;
+}
+html.mobile .dhome-wrap {
+  margin-top: 20px;
+}
+html.mobile .dhome-btn {
+  padding: 11px 22px;
+  font-size: 13px;
+  letter-spacing: .06em;
+  gap: 10px;
+}
+html.mobile .dhome-btn .dhome-arr {
+  font-size: 15px;
+}
+
+/* ── 触摸设备：禁掉 hover 的位移和 letter-spacing 抖动、保留颜色变化 ── */
+@media (hover: none) {
+  html.mobile .cta:hover {
+    transform: none;
+    box-shadow: none;
+    background: var(--secondary);
+  }
+  html.mobile .cta:hover .arr {
+    transform: none;
+  }
+  html.mobile .oss-card:hover .glass {
+    background: rgba(23, 23, 23, 0.34);
+    box-shadow: var(--shadow-glass);
+  }
+  html.mobile .oss-link:hover {
+    gap: 8px;
+    color: var(--neutral);
+    border-bottom-color: var(--line);
+  }
+  html.mobile .exp-bullets a.exp-link:hover {
+    gap: 8px;
+    transform: none;
+  }
+  html.mobile .exp-bullets a.exp-link:hover .arr {
+    transform: none;
+  }
+  html.mobile .detail-back:hover {
+    gap: 6px;
+    background: rgba(23, 23, 23, 0.4);
+    border-color: var(--line);
+  }
+  html.mobile .detail-back:hover .arr-back {
+    transform: none;
+  }
+  html.mobile .dhome-btn:hover {
+    transform: none;
+    letter-spacing: .06em;
+    padding-left: 22px;
+    padding-right: 22px;
+    background: transparent;
+    border-color: rgba(242, 234, 211, 0.28);
+  }
+  html.mobile .dhome-btn:hover .dhome-arr {
+    transform: none;
+  }
+  /* 触摸反馈：按下时给一点视觉变化 */
+  html.mobile .cta:active {
+    background: var(--primary);
+    transform: scale(0.98);
+  }
+  html.mobile .oss-card:active .glass {
+    background: rgba(23, 23, 23, 0.42);
+  }
+  html.mobile .detail-back:active,
+  html.mobile .dhome-btn:active {
+    background: rgba(242, 234, 211, 0.08);
+  }
+}
 </style>
 <noscript><style>.rv{opacity:1!important;transform:none!important;filter:none!important;}</style></noscript>
 </head>
@@ -1159,47 +1669,69 @@ main.is-pushed {
 
 <script>
 /* ════════════════════════════════════════════════
-   VIEWPORT SCALE · 4K/2K 自适应
-   设计基准 1920×1080
-   - body 加 zoom = min(innerWidth/1920, innerHeight/1080)，整体等比放大、保持 16:9
-   - 把 .page / .dpage 的 100vh 改成 JS 算的真实 px = innerHeight / zoom；
-     这样 zoom 把它们的视觉高度刚好缩放回 1 个视口，避免 zoom + vh 单位的坑
-   - 翻页距离（detail setIndex 用 vh）也用真实 px、由 window.__pageH 暴露给主脚本读取
+   VIEWPORT SCALE · 桌面 4K/2K 自适应 + 移动端旁路
+   桌面（>768px）：基准 1920×1080，body.zoom 等比缩放
+   移动端（≤768px）：跳过 zoom、走原生像素布局、html 加 .mobile class、CSS 接管
    ════════════════════════════════════════════════ */
 (function () {
   var dw = 1920, dh = 1080;
+  var MOBILE_MAX = 768;
+  function isMobile() {
+    return window.innerWidth <= MOBILE_MAX;
+  }
   function apply() {
-    var r = Math.min(window.innerWidth / dw, window.innerHeight / dh);
-    document.body.style.zoom = r.toFixed(4);
-    /* 同时把 body 的 layout width 限制 = innerWidth / zoom，缩放后视觉 = viewport 全宽 */
-    var w = window.innerWidth / r;
-    var h = window.innerHeight / r;
-    document.body.style.width = w + 'px';
-    document.body.style.minWidth = w + 'px';
-    window.__pageH = h;
-    var px = h + 'px';
-    document.querySelectorAll('.page, .dpage').forEach(function (el) {
-      el.style.height = px;
-      el.style.minHeight = px;
-      el.style.flexBasis = px;
-    });
-    /* fixed overlay 不受 body 的 layout 宽影响、单独限制；同时锁住宽高让 zoom 后视觉=viewport */
-    document.querySelectorAll('.detail').forEach(function (el) {
-      el.style.width = w + 'px';
-      el.style.height = h + 'px';
-    });
-    /* 触发 detail / main 重新对齐当前页 */
+    var mobile = isMobile();
+    document.documentElement.classList.toggle('mobile', mobile);
+    var pages = document.querySelectorAll('.page, .dpage');
+    var details = document.querySelectorAll('.detail');
+    if (mobile) {
+      /* 移动端：清掉桌面 zoom + 锁宽 + 锁高，让 CSS 的 min-height:100dvh + content 自适应接管 */
+      document.body.style.zoom = '';
+      document.body.style.width = '';
+      document.body.style.minWidth = '';
+      window.__pageH = window.innerHeight;
+      pages.forEach(function (el) {
+        el.style.height = '';
+        el.style.minHeight = '';
+        el.style.flexBasis = '';
+      });
+      details.forEach(function (el) {
+        el.style.width = '';
+        el.style.height = '';
+      });
+    } else {
+      var r = Math.min(window.innerWidth / dw, window.innerHeight / dh);
+      document.body.style.zoom = r.toFixed(4);
+      var w = window.innerWidth / r;
+      var hh = window.innerHeight / r;
+      document.body.style.width = w + 'px';
+      document.body.style.minWidth = w + 'px';
+      window.__pageH = hh;
+      var pxd = hh + 'px';
+      pages.forEach(function (el) {
+        el.style.height = pxd;
+        el.style.minHeight = pxd;
+        el.style.flexBasis = pxd;
+      });
+      details.forEach(function (el) {
+        el.style.width = w + 'px';
+        el.style.height = hh + 'px';
+      });
+    }
     if (typeof window.__resyncMain === 'function') window.__resyncMain();
     if (typeof window.__resyncDetail === 'function') window.__resyncDetail();
   }
   window.__applyViewportScale = apply;
-  /* DOMContentLoaded 后第一次跑（此时 .page / .dpage 已存在） */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', apply);
   } else {
     apply();
   }
   window.addEventListener('resize', apply);
+  /* iOS Safari 地址栏隐藏/出现也会 resize、但 orientationchange 是更明确的旋转信号 */
+  window.addEventListener('orientationchange', function () {
+    setTimeout(apply, 100);
+  });
 })();
 </script>
 
@@ -1680,16 +2212,27 @@ main.is-pushed {
 </div>
 
 <script>
-/* element-level reveal: 一次性触发 */
-const obs = new IntersectionObserver(es => {
-  es.forEach(e => {
-    if (e.isIntersecting) {
-      e.target.classList.add('vis');
-      obs.unobserve(e.target);
-    }
-  });
-}, { threshold: .05, rootMargin: '0px 0px -60px 0px' });
-document.querySelectorAll('.rv').forEach(el => obs.observe(el));
+/* element-level reveal: 一次性触发
+   主页 .rv 用默认 viewport 作 root（桌面 + 移动 通用）
+   detail 内的 .rv：移动端 detail 是 overflow:auto 自己滚动、必须用 root=detail 才能正确触发；
+   桌面 detail 用 transform 翻页、root=null 一样有效 */
+function __makeRevealObs(root) {
+  const o = new IntersectionObserver(es => {
+    es.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('vis');
+        o.unobserve(e.target);
+      }
+    });
+  }, { root: root, threshold: .05, rootMargin: '0px 0px -60px 0px' });
+  return o;
+}
+const mainObs = __makeRevealObs(null);
+const detailEl = document.getElementById('tl-detail');
+const detailRoot = document.documentElement.classList.contains('mobile') ? detailEl : null;
+const detailObs = __makeRevealObs(detailRoot);
+document.querySelectorAll('main .rv').forEach(el => mainObs.observe(el));
+document.querySelectorAll('#tl-detail .rv').forEach(el => detailObs.observe(el));
 
 /* JS 接管滚轮: 主动 swipe 立即响应、queue 机制让"再滚一下"被记住、ease 用 quad 更柔 */
 (() => {
@@ -1739,15 +2282,33 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
     requestAnimationFrame(step);
   }
 
+  function isMobile() {
+    return document.documentElement.classList.contains('mobile');
+  }
+
   /* sync from scroll position on load (e.g. #p2 deeplink) */
   window.addEventListener('load', () => {
-    currentIndex = Math.max(0, Math.min(pages.length - 1,
-      Math.round(window.scrollY / window.innerHeight)));
+    if (isMobile()) {
+      /* mobile 上 page 高度自适应、用 offsetTop 找最近屏 */
+      let minDist = Infinity, best = 0;
+      pages.forEach((p, i) => {
+        const d = Math.abs(p.offsetTop - window.scrollY);
+        if (d < minDist) { minDist = d; best = i; }
+      });
+      currentIndex = best;
+    } else {
+      currentIndex = Math.max(0, Math.min(pages.length - 1,
+        Math.round(window.scrollY / window.innerHeight)));
+    }
   });
 
-  /* viewport scale resize 时把 main 重新对齐到 currentIndex × innerHeight */
+  /* viewport scale resize 时把 main 重新对齐 */
   window.__resyncMain = function () {
-    window.scrollTo(0, currentIndex * window.innerHeight);
+    if (isMobile()) {
+      if (pages[currentIndex]) window.scrollTo(0, pages[currentIndex].offsetTop);
+    } else {
+      window.scrollTo(0, currentIndex * window.innerHeight);
+    }
   };
 
   /* inertia detection: 触控板单次 swipe 衰减出多个 events、要识别并吞掉余波 */
@@ -1761,6 +2322,7 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
   }
 
   window.addEventListener('wheel', (e) => {
+    if (isMobile()) return; // 移动端走原生 scroll-snap
     if (detailOpen()) return; // detail controller 接管
     e.preventDefault();
     const now = performance.now();
@@ -1790,6 +2352,7 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
   }, { passive: false });
 
   window.addEventListener('keydown', (e) => {
+    if (isMobile()) return;
     if (detailOpen()) return; // detail controller 接管
     if (isScrolling) return;
     if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
@@ -1809,10 +2372,12 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
 
   let touchStartY = null;
   window.addEventListener('touchstart', (e) => {
+    if (isMobile()) return;
     if (detailOpen()) return;
     touchStartY = e.touches[0].clientY;
   }, { passive: true });
   window.addEventListener('touchend', (e) => {
+    if (isMobile()) return;
     if (detailOpen()) return;
     if (touchStartY === null || isScrolling) return;
     const dy = touchStartY - e.changedTouches[0].clientY;
@@ -1821,6 +2386,23 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
       else        scrollToPage(currentIndex - 1);
     }
     touchStartY = null;
+  }, { passive: true });
+
+  /* mobile 上用 scroll 事件追踪 currentIndex（scroll-snap 改变屏位置） */
+  let scrollRaf = 0;
+  window.addEventListener('scroll', () => {
+    if (!isMobile()) return;
+    if (scrollRaf) return;
+    scrollRaf = requestAnimationFrame(() => {
+      scrollRaf = 0;
+      let minDist = Infinity, best = 0;
+      const y = window.scrollY;
+      pages.forEach((p, i) => {
+        const d = Math.abs(p.offsetTop - y);
+        if (d < minDist) { minDist = d; best = i; }
+      });
+      currentIndex = best;
+    });
   }, { passive: true });
 })();
 
@@ -1845,6 +2427,10 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
   const easeInOutCubic = t => t < 0.5
     ? 4 * t * t * t
     : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+  function isMobile() {
+    return document.documentElement.classList.contains('mobile');
+  }
 
   function updatePageNo(idx) {
     pageNoEl.textContent = String(idx + 1).padStart(2, '0');
@@ -1875,6 +2461,30 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
     const oldIdx = detailIdx;
     detailIdx = idx;
     updatePageNo(idx);
+
+    if (isMobile()) {
+      /* mobile: detail 自身可滚 + scroll-snap，setIndex 仅供 hash deeplink 用 */
+      const start = detail.scrollTop;
+      const target = dpages[idx].offsetTop;
+      const distance = target - start;
+      const startTime = performance.now();
+      function step(now) {
+        const t = Math.min((now - startTime) / SCROLL_DURATION, 1);
+        detail.scrollTop = start + distance * easeInOutCubic(t);
+        if (t < 1) requestAnimationFrame(step);
+        else {
+          isAnimating = false;
+          if (queuedDir !== 0) {
+            const dir = queuedDir;
+            queuedDir = 0;
+            requestAnimationFrame(() => setIndex(detailIdx + dir));
+          }
+        }
+      }
+      requestAnimationFrame(step);
+      return;
+    }
+
     revealPage(idx);
 
     /* 用 layout px 翻页（不是 vh）——和 viewport-scale 联动后避免 zoom + vh 错位 */
@@ -1904,21 +2514,49 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
   function resetToTop() {
     detailIdx = 0;
     updatePageNo(0);
-    stack.style.transition = 'none';
-    stack.style.transform = 'translate3d(0, 0, 0)';
-    void stack.offsetHeight;
-    stack.style.transition = '';
+    if (isMobile()) {
+      detail.scrollTop = 0;
+    } else {
+      stack.style.transition = 'none';
+      stack.style.transform = 'translate3d(0, 0, 0)';
+      void stack.offsetHeight;
+      stack.style.transition = '';
+    }
     clearAllReveals();
   }
 
-  /* viewport scale resize 时把 stack 重新对齐到当前 detailIdx 对应的 px 偏移 */
+  /* viewport scale resize 时把 stack/scroll 重新对齐 */
   window.__resyncDetail = function () {
+    if (isMobile()) {
+      if (dpages[detailIdx]) detail.scrollTop = dpages[detailIdx].offsetTop;
+      return;
+    }
     const pageH = window.__pageH || window.innerHeight;
     stack.style.transition = 'none';
     stack.style.transform = `translate3d(0, ${-detailIdx * pageH}px, 0)`;
     void stack.offsetHeight;
     stack.style.transition = '';
   };
+
+  /* mobile 上用 detail 的 scroll 事件追踪 detailIdx + 更新 chrome 页码 */
+  let dScrollRaf = 0;
+  detail.addEventListener('scroll', () => {
+    if (!isMobile()) return;
+    if (dScrollRaf) return;
+    dScrollRaf = requestAnimationFrame(() => {
+      dScrollRaf = 0;
+      let minDist = Infinity, best = 0;
+      const y = detail.scrollTop;
+      dpages.forEach((p, i) => {
+        const d = Math.abs(p.offsetTop - y);
+        if (d < minDist) { minDist = d; best = i; }
+      });
+      if (best !== detailIdx) {
+        detailIdx = best;
+        updatePageNo(best);
+      }
+    });
+  }, { passive: true });
 
   /* wheel + 触控板余波识别（与主页同套机制） */
   let lastWheelTime = 0;
@@ -1927,6 +2565,7 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
   const INERTIA_GAP = 200;
 
   window.addEventListener('wheel', (e) => {
+    if (isMobile()) return;
     if (!isOpen()) return;
     e.preventDefault();
     const now = performance.now();
@@ -1961,6 +2600,7 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
       close();
       return;
     }
+    if (isMobile()) return; // 移动端键盘交互交还浏览器
     if (isAnimating) return;
     if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
       e.preventDefault();
@@ -1979,10 +2619,12 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
 
   let touchStartY = null;
   detail.addEventListener('touchstart', (e) => {
+    if (isMobile()) return; // 移动端走原生滚动 + snap
     if (!isOpen()) return;
     touchStartY = e.touches[0].clientY;
   }, { passive: true });
   detail.addEventListener('touchend', (e) => {
+    if (isMobile()) return;
     if (!isOpen() || touchStartY === null || isAnimating) return;
     const dy = touchStartY - e.changedTouches[0].clientY;
     if (Math.abs(dy) > 40) {
@@ -2002,10 +2644,16 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
     if (location.hash !== '#tl-agent') {
       history.replaceState(null, '', '#tl-agent');
     }
-    /* 等横滑过渡进行到一半时再点亮第一屏 reveal、形成衔接 */
-    setTimeout(() => {
-      if (isOpen()) revealPage(0);
-    }, 500);
+    if (isMobile()) {
+      /* mobile: detail 是滚动长页、所有 .rv 直接显示、用户自然向下滚 */
+      dpages.forEach(p => p.querySelectorAll('.rv').forEach(el => el.classList.add('vis')));
+      detail.scrollTop = 0;
+    } else {
+      /* 桌面：等横滑过渡进行到一半时再点亮第一屏 reveal、形成衔接 */
+      setTimeout(() => {
+        if (isOpen()) revealPage(0);
+      }, 500);
+    }
   }
 
   function close() {
