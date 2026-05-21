@@ -1176,11 +1176,9 @@ html.mobile {
   }
 }
 
-/* ── 移动端翻页：scroll-snap 实现一屏一翻、内容超高时屏内可滚再翻 ── */
+/* ── 移动端翻页：屏内自由滚 + JS 监听"已到底再滑一次"才触发翻页 ── */
 html.mobile,
 html.mobile body {
-  scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
   height: 100%;
 }
 html.mobile body {
@@ -1188,15 +1186,13 @@ html.mobile body {
   overflow-x: hidden;
 }
 
-/* ── PAGE 容器：高度自适应、内容靠上、scroll-snap 锚 ── */
+/* ── PAGE 容器：高度自适应、内容靠上 ── */
 html.mobile .page {
   height: auto;
   min-height: 100vh;
   min-height: 100dvh;
   padding: 64px 0 60px;
   justify-content: flex-start;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
 html.mobile .wrap {
   padding: 0 22px;
@@ -1452,12 +1448,10 @@ html.mobile .end-mark::after {
   width: 44px;
 }
 
-/* ── DETAIL: mobile 上转成可滚 + 内置 scroll-snap、chrome sticky 顶部 ── */
+/* ── DETAIL: mobile 上转成可滚、chrome sticky 顶部、不用原生 snap ── */
 html.mobile .detail {
   overflow-y: auto;
   overflow-x: hidden;
-  scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 }
 html.mobile .detail-stack {
@@ -1508,7 +1502,7 @@ html.mobile .detail-back .arr-back {
   font-size: 15px;
 }
 
-/* ── DETAIL · DPAGE：高度自适应、内容靠上、snap 锚 ── */
+/* ── DETAIL · DPAGE：高度自适应、内容靠上 ── */
 html.mobile .dpage {
   flex: 0 0 auto;
   height: auto;
@@ -1516,8 +1510,6 @@ html.mobile .dpage {
   min-height: 100dvh;
   padding: 80px 0 60px;
   justify-content: flex-start;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
 html.mobile .dhero-eyebrow,
 html.mobile .dchapter-eyebrow {
@@ -2256,6 +2248,37 @@ document.querySelectorAll('#tl-detail .rv').forEach(el => detailObs.observe(el))
     }
   }
 
+  /* 通用：1300ms easeInOutCubic 滚到 targetY（mobile + desktop 共用） */
+  function smoothScrollWindowTo(targetY) {
+    if (isScrolling) return;
+    isScrolling = true;
+    const start = window.scrollY;
+    const distance = targetY - start;
+    const startTime = performance.now();
+    function step(now) {
+      const t = Math.min((now - startTime) / SCROLL_DURATION, 1);
+      window.scrollTo(0, start + distance * easeInOutCubic(t));
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        isScrolling = false;
+        flushQueue();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* mobile 翻页：滚到目标 page 的顶或底 */
+  function scrollToMobilePage(idx, alignBottom) {
+    if (idx < 0 || idx >= pages.length || isScrolling) return;
+    currentIndex = idx;
+    const p = pages[idx];
+    const target = alignBottom
+      ? Math.max(p.offsetTop, p.offsetTop + p.offsetHeight - window.innerHeight)
+      : p.offsetTop;
+    smoothScrollWindowTo(target);
+  }
+
   function scrollToPage(idx) {
     if (idx < 0 || idx >= pages.length || isScrolling || idx === currentIndex) return;
     isScrolling = true;
@@ -2371,37 +2394,71 @@ document.querySelectorAll('#tl-detail .rv').forEach(el => detailObs.observe(el))
   });
 
   let touchStartY = null;
+  let touchStartScrollY = 0;
   window.addEventListener('touchstart', (e) => {
-    if (isMobile()) return;
     if (detailOpen()) return;
     touchStartY = e.touches[0].clientY;
+    touchStartScrollY = window.scrollY;
   }, { passive: true });
   window.addEventListener('touchend', (e) => {
-    if (isMobile()) return;
     if (detailOpen()) return;
-    if (touchStartY === null || isScrolling) return;
-    const dy = touchStartY - e.changedTouches[0].clientY;
+    if (touchStartY === null) return;
+    const endY = e.changedTouches[0].clientY;
+    const dy = touchStartY - endY;
+    const scrolled = window.scrollY - touchStartScrollY;
+    touchStartY = null;
+
+    if (isMobile()) {
+      /* mobile：屏内自由滚 + "已到边再滑一次" 才翻页 */
+      if (isScrolling) return;
+      if (Math.abs(dy) < 60) return;
+      if (dy > 0) {
+        /* swipe up：想看下面 */
+        const p = pages[currentIndex];
+        const pageBottom = p.offsetTop + p.offsetHeight;
+        const viewportBottom = window.scrollY + window.innerHeight;
+        if (viewportBottom >= pageBottom - 5 && Math.abs(scrolled) < 10) {
+          if (currentIndex < pages.length - 1) {
+            scrollToMobilePage(currentIndex + 1, false);
+          }
+        }
+      } else {
+        /* swipe down：想看上面 */
+        const p = pages[currentIndex];
+        if (window.scrollY <= p.offsetTop + 5 && Math.abs(scrolled) < 10) {
+          if (currentIndex > 0) {
+            scrollToMobilePage(currentIndex - 1, true);
+          }
+        }
+      }
+      return;
+    }
+
+    /* 桌面原逻辑 */
+    if (isScrolling) return;
     if (Math.abs(dy) > 40) {
       if (dy > 0) scrollToPage(currentIndex + 1);
       else        scrollToPage(currentIndex - 1);
     }
-    touchStartY = null;
   }, { passive: true });
 
-  /* mobile 上用 scroll 事件追踪 currentIndex（scroll-snap 改变屏位置） */
+  /* mobile 上用 scroll 事件追踪 currentIndex（free scroll 时同步当前屏） */
   let scrollRaf = 0;
   window.addEventListener('scroll', () => {
     if (!isMobile()) return;
+    if (isScrolling) return; /* 翻页中、不要被 scroll 反向同步打断 */
     if (scrollRaf) return;
     scrollRaf = requestAnimationFrame(() => {
       scrollRaf = 0;
-      let minDist = Infinity, best = 0;
-      const y = window.scrollY;
-      pages.forEach((p, i) => {
-        const d = Math.abs(p.offsetTop - y);
-        if (d < minDist) { minDist = d; best = i; }
-      });
-      currentIndex = best;
+      /* 用 viewport 中线找当前屏：找包含 mid 点的 page */
+      const mid = window.scrollY + window.innerHeight / 2;
+      for (let i = 0; i < pages.length; i++) {
+        const p = pages[i];
+        if (mid >= p.offsetTop && mid < p.offsetTop + p.offsetHeight) {
+          currentIndex = i;
+          break;
+        }
+      }
     });
   }, { passive: true });
 })();
@@ -2542,18 +2599,20 @@ document.querySelectorAll('#tl-detail .rv').forEach(el => detailObs.observe(el))
   let dScrollRaf = 0;
   detail.addEventListener('scroll', () => {
     if (!isMobile()) return;
+    if (isAnimating) return;
     if (dScrollRaf) return;
     dScrollRaf = requestAnimationFrame(() => {
       dScrollRaf = 0;
-      let minDist = Infinity, best = 0;
-      const y = detail.scrollTop;
-      dpages.forEach((p, i) => {
-        const d = Math.abs(p.offsetTop - y);
-        if (d < minDist) { minDist = d; best = i; }
-      });
-      if (best !== detailIdx) {
-        detailIdx = best;
-        updatePageNo(best);
+      const mid = detail.scrollTop + detail.clientHeight / 2;
+      for (let i = 0; i < dpages.length; i++) {
+        const p = dpages[i];
+        if (mid >= p.offsetTop && mid < p.offsetTop + p.offsetHeight) {
+          if (i !== detailIdx) {
+            detailIdx = i;
+            updatePageNo(i);
+          }
+          break;
+        }
       }
     });
   }, { passive: true });
@@ -2617,21 +2676,71 @@ document.querySelectorAll('#tl-detail .rv').forEach(el => detailObs.observe(el))
     }
   });
 
+  /* mobile detail 翻页：滚到目标 dpage 的顶或底 */
+  function setIndexMobile(idx, alignBottom) {
+    if (idx < 0 || idx >= dpages.length || isAnimating) return;
+    detailIdx = idx;
+    updatePageNo(idx);
+    const p = dpages[idx];
+    const target = alignBottom
+      ? Math.max(p.offsetTop, p.offsetTop + p.offsetHeight - detail.clientHeight)
+      : p.offsetTop;
+    isAnimating = true;
+    const start = detail.scrollTop;
+    const distance = target - start;
+    const startTime = performance.now();
+    function step(now) {
+      const t = Math.min((now - startTime) / SCROLL_DURATION, 1);
+      detail.scrollTop = start + distance * easeInOutCubic(t);
+      if (t < 1) requestAnimationFrame(step);
+      else isAnimating = false;
+    }
+    requestAnimationFrame(step);
+  }
+
   let touchStartY = null;
+  let dTouchStartScroll = 0;
   detail.addEventListener('touchstart', (e) => {
-    if (isMobile()) return; // 移动端走原生滚动 + snap
     if (!isOpen()) return;
     touchStartY = e.touches[0].clientY;
+    dTouchStartScroll = detail.scrollTop;
   }, { passive: true });
   detail.addEventListener('touchend', (e) => {
-    if (isMobile()) return;
-    if (!isOpen() || touchStartY === null || isAnimating) return;
-    const dy = touchStartY - e.changedTouches[0].clientY;
+    if (!isOpen() || touchStartY === null) return;
+    const endY = e.changedTouches[0].clientY;
+    const dy = touchStartY - endY;
+    const scrolled = detail.scrollTop - dTouchStartScroll;
+    touchStartY = null;
+
+    if (isMobile()) {
+      if (isAnimating) return;
+      if (Math.abs(dy) < 60) return;
+      if (dy > 0) {
+        const p = dpages[detailIdx];
+        const pageBottom = p.offsetTop + p.offsetHeight;
+        const viewportBottom = detail.scrollTop + detail.clientHeight;
+        if (viewportBottom >= pageBottom - 5 && Math.abs(scrolled) < 10) {
+          if (detailIdx < dpages.length - 1) {
+            setIndexMobile(detailIdx + 1, false);
+          }
+        }
+      } else {
+        const p = dpages[detailIdx];
+        if (detail.scrollTop <= p.offsetTop + 5 && Math.abs(scrolled) < 10) {
+          if (detailIdx > 0) {
+            setIndexMobile(detailIdx - 1, true);
+          }
+        }
+      }
+      return;
+    }
+
+    /* 桌面原逻辑 */
+    if (isAnimating) return;
     if (Math.abs(dy) > 40) {
       if (dy > 0) setIndex(detailIdx + 1);
       else        setIndex(detailIdx - 1);
     }
-    touchStartY = null;
   }, { passive: true });
 
   function open() {
