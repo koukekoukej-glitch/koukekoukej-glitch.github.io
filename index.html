@@ -1176,15 +1176,8 @@ html.mobile {
   }
 }
 
-/* ── 移动端翻页：屏内自由滚 + JS 监听"已到底再滑一次"才触发翻页 ── */
-html.mobile,
-html.mobile body {
-  height: 100%;
-}
-html.mobile body {
-  overflow-y: auto;
-  overflow-x: hidden;
-}
+/* ── 移动端：长滚动页面、不接管原生滚动、PC 端逻辑保持原样 ── */
+/* body 默认就是 window scroll，不锁 height、不改 overflow，让 iOS Safari 地址栏能正常收起 */
 
 /* ── PAGE 容器：高度自适应、内容靠上 ── */
 html.mobile .page {
@@ -2248,37 +2241,6 @@ document.querySelectorAll('#tl-detail .rv').forEach(el => detailObs.observe(el))
     }
   }
 
-  /* 通用：1300ms easeInOutCubic 滚到 targetY（mobile + desktop 共用） */
-  function smoothScrollWindowTo(targetY) {
-    if (isScrolling) return;
-    isScrolling = true;
-    const start = window.scrollY;
-    const distance = targetY - start;
-    const startTime = performance.now();
-    function step(now) {
-      const t = Math.min((now - startTime) / SCROLL_DURATION, 1);
-      window.scrollTo(0, start + distance * easeInOutCubic(t));
-      if (t < 1) {
-        requestAnimationFrame(step);
-      } else {
-        isScrolling = false;
-        flushQueue();
-      }
-    }
-    requestAnimationFrame(step);
-  }
-
-  /* mobile 翻页：滚到目标 page 的顶或底 */
-  function scrollToMobilePage(idx, alignBottom) {
-    if (idx < 0 || idx >= pages.length || isScrolling) return;
-    currentIndex = idx;
-    const p = pages[idx];
-    const target = alignBottom
-      ? Math.max(p.offsetTop, p.offsetTop + p.offsetHeight - window.innerHeight)
-      : p.offsetTop;
-    smoothScrollWindowTo(target);
-  }
-
   function scrollToPage(idx) {
     if (idx < 0 || idx >= pages.length || isScrolling || idx === currentIndex) return;
     isScrolling = true;
@@ -2394,72 +2356,21 @@ document.querySelectorAll('#tl-detail .rv').forEach(el => detailObs.observe(el))
   });
 
   let touchStartY = null;
-  let touchStartScrollY = 0;
   window.addEventListener('touchstart', (e) => {
+    if (isMobile()) return; /* 移动端走浏览器原生滚动、不接管 */
     if (detailOpen()) return;
     touchStartY = e.touches[0].clientY;
-    touchStartScrollY = window.scrollY;
   }, { passive: true });
   window.addEventListener('touchend', (e) => {
+    if (isMobile()) return;
     if (detailOpen()) return;
-    if (touchStartY === null) return;
-    const endY = e.changedTouches[0].clientY;
-    const dy = touchStartY - endY;
-    const scrolled = window.scrollY - touchStartScrollY;
-    touchStartY = null;
-
-    if (isMobile()) {
-      /* mobile：屏内自由滚 + "已到边再滑一次" 才翻页 */
-      if (isScrolling) return;
-      if (Math.abs(dy) < 60) return;
-      if (dy > 0) {
-        /* swipe up：想看下面 */
-        const p = pages[currentIndex];
-        const pageBottom = p.offsetTop + p.offsetHeight;
-        const viewportBottom = window.scrollY + window.innerHeight;
-        if (viewportBottom >= pageBottom - 5 && Math.abs(scrolled) < 10) {
-          if (currentIndex < pages.length - 1) {
-            scrollToMobilePage(currentIndex + 1, false);
-          }
-        }
-      } else {
-        /* swipe down：想看上面 */
-        const p = pages[currentIndex];
-        if (window.scrollY <= p.offsetTop + 5 && Math.abs(scrolled) < 10) {
-          if (currentIndex > 0) {
-            scrollToMobilePage(currentIndex - 1, true);
-          }
-        }
-      }
-      return;
-    }
-
-    /* 桌面原逻辑 */
-    if (isScrolling) return;
+    if (touchStartY === null || isScrolling) return;
+    const dy = touchStartY - e.changedTouches[0].clientY;
     if (Math.abs(dy) > 40) {
       if (dy > 0) scrollToPage(currentIndex + 1);
       else        scrollToPage(currentIndex - 1);
     }
-  }, { passive: true });
-
-  /* mobile 上用 scroll 事件追踪 currentIndex（free scroll 时同步当前屏） */
-  let scrollRaf = 0;
-  window.addEventListener('scroll', () => {
-    if (!isMobile()) return;
-    if (isScrolling) return; /* 翻页中、不要被 scroll 反向同步打断 */
-    if (scrollRaf) return;
-    scrollRaf = requestAnimationFrame(() => {
-      scrollRaf = 0;
-      /* 用 viewport 中线找当前屏：找包含 mid 点的 page */
-      const mid = window.scrollY + window.innerHeight / 2;
-      for (let i = 0; i < pages.length; i++) {
-        const p = pages[i];
-        if (mid >= p.offsetTop && mid < p.offsetTop + p.offsetHeight) {
-          currentIndex = i;
-          break;
-        }
-      }
-    });
+    touchStartY = null;
   }, { passive: true });
 })();
 
@@ -2676,71 +2587,21 @@ document.querySelectorAll('#tl-detail .rv').forEach(el => detailObs.observe(el))
     }
   });
 
-  /* mobile detail 翻页：滚到目标 dpage 的顶或底 */
-  function setIndexMobile(idx, alignBottom) {
-    if (idx < 0 || idx >= dpages.length || isAnimating) return;
-    detailIdx = idx;
-    updatePageNo(idx);
-    const p = dpages[idx];
-    const target = alignBottom
-      ? Math.max(p.offsetTop, p.offsetTop + p.offsetHeight - detail.clientHeight)
-      : p.offsetTop;
-    isAnimating = true;
-    const start = detail.scrollTop;
-    const distance = target - start;
-    const startTime = performance.now();
-    function step(now) {
-      const t = Math.min((now - startTime) / SCROLL_DURATION, 1);
-      detail.scrollTop = start + distance * easeInOutCubic(t);
-      if (t < 1) requestAnimationFrame(step);
-      else isAnimating = false;
-    }
-    requestAnimationFrame(step);
-  }
-
   let touchStartY = null;
-  let dTouchStartScroll = 0;
   detail.addEventListener('touchstart', (e) => {
+    if (isMobile()) return; /* 移动端走浏览器原生滚动、不接管 */
     if (!isOpen()) return;
     touchStartY = e.touches[0].clientY;
-    dTouchStartScroll = detail.scrollTop;
   }, { passive: true });
   detail.addEventListener('touchend', (e) => {
-    if (!isOpen() || touchStartY === null) return;
-    const endY = e.changedTouches[0].clientY;
-    const dy = touchStartY - endY;
-    const scrolled = detail.scrollTop - dTouchStartScroll;
-    touchStartY = null;
-
-    if (isMobile()) {
-      if (isAnimating) return;
-      if (Math.abs(dy) < 60) return;
-      if (dy > 0) {
-        const p = dpages[detailIdx];
-        const pageBottom = p.offsetTop + p.offsetHeight;
-        const viewportBottom = detail.scrollTop + detail.clientHeight;
-        if (viewportBottom >= pageBottom - 5 && Math.abs(scrolled) < 10) {
-          if (detailIdx < dpages.length - 1) {
-            setIndexMobile(detailIdx + 1, false);
-          }
-        }
-      } else {
-        const p = dpages[detailIdx];
-        if (detail.scrollTop <= p.offsetTop + 5 && Math.abs(scrolled) < 10) {
-          if (detailIdx > 0) {
-            setIndexMobile(detailIdx - 1, true);
-          }
-        }
-      }
-      return;
-    }
-
-    /* 桌面原逻辑 */
-    if (isAnimating) return;
+    if (isMobile()) return;
+    if (!isOpen() || touchStartY === null || isAnimating) return;
+    const dy = touchStartY - e.changedTouches[0].clientY;
     if (Math.abs(dy) > 40) {
       if (dy > 0) setIndex(detailIdx + 1);
       else        setIndex(detailIdx - 1);
     }
+    touchStartY = null;
   }, { passive: true });
 
   function open() {
